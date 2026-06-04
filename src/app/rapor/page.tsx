@@ -2,6 +2,11 @@
 import { useEffect, useState } from "react";
 import { raporVerileriniGetir, kasayiSifirla } from "../actions";
 
+interface UrunOzeti {
+  miktar: number;
+  ciro: number;
+}
+
 export default function PatronEkrani() {
   const [veriler, setVeriler] = useState<any[]>([]);
   const [filtre, setFiltre] = useState("bugun"); 
@@ -109,10 +114,15 @@ export default function PatronEkrani() {
     acc[urun.isim].miktar += urun.miktar;
     acc[urun.isim].ciro += urun.tutar;
     return acc;
-  }, {} as Record<string, { miktar: number; ciro: number }>);
+  }, {} as Record<string, UrunOzeti>);
 
+  // --- KRAL DÜZELTMESİ: TypeScript'in takıldığı yeri net bir tiple mühürledik ---
   const siralama = Object.entries(urunGruplari)
-    .map(([isim, data]) => ({ isim, ...data }))
+    .map(([isim, data]) => ({
+      isim,
+      miktar: (data as UrunOzeti).miktar,
+      ciro: (data as UrunOzeti).ciro,
+    }))
     .sort((a, b) => b.ciro - a.ciro);
 
   const enCokSatan = siralama.length > 0 ? siralama[0].isim : "Yok";
@@ -141,7 +151,7 @@ export default function PatronEkrani() {
           </div>
         </div>
 
-        {/* Filtreleme ve Özel Türkçe Seçim Paneli */}
+        {/* Filtreleme Paneli */}
         <div className="flex flex-col gap-4 mb-8 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
           <div className="flex flex-wrap gap-2">
             {["bugun", "hafta", "ay", "ozel", "hepsi"].map((f) => (
