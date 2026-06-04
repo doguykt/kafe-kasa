@@ -4,10 +4,9 @@ import { raporVerileriniGetir, kasayiSifirla } from "../actions";
 
 export default function PatronEkrani() {
   const [veriler, setVeriler] = useState<any[]>([]);
-  const [filtre, setFiltre] = useState("bugun"); // bugun, hafta, ay, ozel, hepsi
+  const [filtre, setFiltre] = useState("bugun"); 
   const [yukleniyor, setYukleniyor] = useState(true);
 
-  // Türkçe Takvim Seçimleri (Yıl, Ay, Gün)
   const simdi = new Date();
   const [basYil, setBasYil] = useState(simdi.getFullYear().toString());
   const [basAy, setBasAy] = useState((simdi.getMonth() + 1).toString().padStart(2, "0"));
@@ -17,7 +16,6 @@ export default function PatronEkrani() {
   const [bitAy, setBitAy] = useState((simdi.getMonth() + 1).toString().padStart(2, "0"));
   const [bitGun, setBitGun] = useState(simdi.getDate().toString().padStart(2, "0"));
 
-  // Birleştirilmiş Tarih Stringleri (YYYY-MM-DD)
   const baslangicTarihi = `${basYil}-${basAy}-${basGun}`;
   const bitisTarihi = `${bitYil}-${bitAy}-${bitGun}`;
 
@@ -70,7 +68,7 @@ export default function PatronEkrani() {
     if (filtre === "bugun") {
       return simdi.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     }
-    if (filtre === "text_hafta" || filtre === "hafta") {
+    if (filtre === "hafta") {
       const gecenHafta = new Date(simdi.getTime() - 7 * 24 * 60 * 60 * 1000);
       return `${gecenHafta.toLocaleDateString('tr-TR')} - ${simdi.toLocaleDateString('tr-TR')}`;
     }
