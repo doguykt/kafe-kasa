@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import { useEffect, useState } from "react";
 import { raporVerileriniGetir, kasayiSifirla } from "../actions";
@@ -59,18 +58,11 @@ export default function PatronEkrani() {
     }
   };
   
-  const tarihYazisiGetir = () => {
+  const textGetir = () => {
     if (filtre === "bugun") return simdi.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-    if (filtre === "hafta") {
-      const gecenHafta = new Date(simdi.getTime() - 7 * 24 * 60 * 60 * 1000);
-      return `${gecenHafta.toLocaleDateString('tr-TR')} - ${simdi.toLocaleDateString('tr-TR')}`;
-    }
-    if (filtre === "ay") return simdi.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
-    if (filtre === "ozel") {
-      const bas = new Date(baslangicTarihi).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-      const bit = new Date(bitisTarihi).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-      return `${bas} - ${bit}`;
-    }
+    if (filtre === "hafta") return "Son 7 Günlük Satış Raporu";
+    if (filtre === "ay") return "Son 30 Günlük Satış Raporu";
+    if (filtre === "ozel") return `${baslangicTarihi} - ${bitisTarihi}`;
     return "Tüm Zamanların Satış Kaydı";
   };
 
@@ -91,7 +83,7 @@ export default function PatronEkrani() {
   const toplamCiro = filtrelenmisVeriler.reduce((toplam: number, urun: any) => toplam + urun.tutar, 0);
   const toplamUrun = filtrelenmisVeriler.reduce((toplam: number, urun: any) => toplam + urun.miktar, 0);
 
-  // Dümdüz harita mantığıyla gruplama, TypeScript'in ruhu bile duymayacak
+  // DÜMDÜZ ESKİ USÜL GRUPLAMA
   const urunGruplari: any = {};
   filtrelenmisVeriler.forEach((urun: any) => {
     if (!urunGruplari[urun.isim]) {
@@ -101,15 +93,18 @@ export default function PatronEkrani() {
     urunGruplari[urun.isim].ciro += urun.tutar;
   });
 
-  // HATA VEREN O SPREAD MANTIĞINI SİLDİM, DÜMDÜZ DİZİYE ÇEVİRİYORUM
-  const siralama = Object.keys(urunGruplari).map((isim) => {
-    return {
+  // HATA VEREN "SPREAD" (O ÜÇ NOKTA) OLAN HER ŞEYİ SİLDİM. EL YAZISIYLA DİZİ YAPIYORUZ
+  const dizi: any[] = [];
+  for (const isim in urunGruplari) {
+    dizi.push({
       isim: isim,
       miktar: urunGruplari[isim].miktar,
       ciro: urunGruplari[isim].ciro
-    };
-  }).sort((a: any, b: any) => b.ciro - a.ciro);
+    });
+  }
 
+  // SIRALAMA VE EN ÇOK SATAN
+  const siralama = dizi.sort((a: any, b: any) => b.ciro - a.ciro);
   const enCokSatan = siralama.length > 0 ? siralama[0].isim : "Yok";
 
   if (yukleniyor) return <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">Kasa sayılıyor kral...</div>;
@@ -123,7 +118,7 @@ export default function PatronEkrani() {
           <div>
             <h1 className="text-4xl font-black text-amber-500">PATRON EKRANI</h1>
             <p className="text-zinc-400 text-lg mt-1">
-              Gelişmiş Z Raporu • <span className="text-amber-500 font-semibold">{tarihYazisiGetir()}</span>
+              Gelişmiş Z Raporu • <span className="text-amber-500 font-semibold">{textGetir()}</span>
             </p>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
@@ -150,7 +145,7 @@ export default function PatronEkrani() {
             ))}
           </div>
 
-          {/* %100 TÜRKÇE MANUEL SEÇİM PANELİ */}
+          {/* TÜRKÇE SEÇİM PANELİ */}
           {filtre === "ozel" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 mt-2">
               <div>
@@ -186,7 +181,7 @@ export default function PatronEkrani() {
           )}
         </div>
 
-        {/* İstatistik Kartları */}
+        {/* İstatistikler */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
             <p className="text-zinc-400 mb-1 font-medium">Toplam Ciro</p>
@@ -197,11 +192,12 @@ export default function PatronEkrani() {
             <p className="text-3xl font-black text-amber-500">{toplamUrun}</p>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
+            <p className="text-zinc-400 mb-1 font-medium">En Çok Satan Ürün</p>
             <p className="text-xl font-bold text-white truncate">{enCokSatan}</p>
           </div>
         </div>
 
-        {/* Satış Detay Tablosu */}
+        {/* Tablo */}
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden shadow-2xl">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -214,9 +210,7 @@ export default function PatronEkrani() {
             <tbody>
               {siralama.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="p-8 text-center text-zinc-500">
-                    Seçili tarih aralığında henüz satış kaydı yok kral.
-                  </td>
+                  <td colSpan={3} className="p-8 text-center text-zinc-500">Henüz satış kaydı yok kral.</td>
                 </tr>
               ) : (
                 siralama.map((satir: any, index: number) => (
